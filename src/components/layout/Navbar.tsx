@@ -1,21 +1,33 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon, FileCheck, Upload, LogIn } from "lucide-react";
+import { Menu, X, Sun, Moon, FileCheck, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/upload", label: "Upload Paper" },
-  { href: "/results", label: "Results" },
-];
+import { useAuth } from "@/state/AppContext";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const navLinks: Array<{ href: string; label: string; disabled?: boolean }> =
+    !isAuthenticated
+      ? []
+      : user?.role === "teacher"
+        ? [
+            { href: "/teacher/upload-batch", label: "Upload Batch" },
+            { href: "/history", label: "History" },
+            { href: "/teacher/edit-results", label: "Edit Results" },
+            { href: "/teacher/billing", label: "Payment & Plan" },
+          ]
+        : [
+            { href: "/upload", label: "Upload Paper" },
+            { href: "/results", label: "Results" },
+            { href: "/history", label: "History" },
+          ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -37,12 +49,18 @@ export function Navbar() {
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
-                  to={link.href}
+                  to={link.disabled ? location.pathname : link.href}
+                  onClick={(e) => {
+                    if (link.disabled) e.preventDefault();
+                  }}
+                  aria-disabled={link.disabled ? true : undefined}
                   className={cn(
                     "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
-                    location.pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    link.disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : location.pathname === link.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
                   {link.label}
@@ -78,16 +96,29 @@ export function Navbar() {
 
               {/* Auth Buttons */}
               <div className="hidden sm:flex items-center gap-2">
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">
-                    Log in
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button variant="gradient" size="sm">
-                    Sign up
-                  </Button>
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <span className="text-sm text-muted-foreground hidden md:inline">
+                      {user?.name?.trim() || user?.email}
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={logout}>
+                      Log out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login">
+                      <Button variant="ghost" size="sm">
+                        Log in
+                      </Button>
+                    </Link>
+                    <Link to="/signup">
+                      <Button variant="gradient" size="sm">
+                        Sign up
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Mobile Menu Toggle */}
@@ -116,30 +147,64 @@ export function Navbar() {
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
-                      to={link.href}
-                      onClick={() => setIsOpen(false)}
+                      to={link.disabled ? location.pathname : link.href}
+                      onClick={(e) => {
+                        if (link.disabled) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setIsOpen(false);
+                      }}
+                      aria-disabled={link.disabled ? true : undefined}
                       className={cn(
                         "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300",
-                        location.pathname === link.href
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        link.disabled
+                          ? "opacity-50 cursor-not-allowed"
+                          : location.pathname === link.href
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       )}
                     >
-                      {link.label === "Upload Paper" && <Upload className="w-4 h-4" />}
+                      {(link.label === "Upload Paper" || link.label === "Upload Batch") && (
+                        <Upload className="w-4 h-4" />
+                      )}
                       {link.label}
                     </Link>
                   ))}
                   <div className="pt-2 border-t border-border/50 flex gap-2">
-                    <Link to="/login" className="flex-1" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full">
-                        Log in
+                    {isAuthenticated ? (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          logout();
+                          setIsOpen(false);
+                        }}
+                      >
+                        Log out
                       </Button>
-                    </Link>
-                    <Link to="/signup" className="flex-1" onClick={() => setIsOpen(false)}>
-                      <Button variant="gradient" className="w-full">
-                        Sign up
-                      </Button>
-                    </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          className="flex-1"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Button variant="outline" className="w-full">
+                            Log in
+                          </Button>
+                        </Link>
+                        <Link
+                          to="/signup"
+                          className="flex-1"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Button variant="gradient" className="w-full">
+                            Sign up
+                          </Button>
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>

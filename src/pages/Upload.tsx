@@ -310,6 +310,9 @@ import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { usePaperApi } from "@/services/usePaperApi";
+import { DoodleBackground } from "@/components/decor/DoodleBackground";
+import { Badge } from "@/components/ui/badge";
 
 interface UploadedFile {
   file: File;
@@ -322,6 +325,7 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
+  const { extractText } = usePaperApi();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
@@ -352,111 +356,57 @@ export default function UploadPage() {
     });
   };
 
-const handleSubmit = async () => {
-  if (files.length === 0) {
-    toast({
-      title: "No files selected",
-      description: "Please upload at least one paper to check.",
-      variant: "destructive",
-    });
-    return;
-  }
+  const handleSubmit = async () => {
+    if (files.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please upload at least one paper to check.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  setIsUploading(true);
-  setUploadProgress(5);
+    setIsUploading(true);
+    setUploadProgress(5);
 
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
-  try {
-    // Keep this for parity with your real payload shape during the demo.
-    const formData = new FormData();
-    files.forEach((item) => {
-      formData.append("file", item.file);
-    });
+    try {
+      // Simulated progress stages so the UI feels responsive.
+      await sleep(350);
+      setUploadProgress(25);
 
-    // DEMO MODE: no API requests are made.
-    // If you want to switch back to live mode later, uncomment this block:
-    // const response = await fetch(
-    //   "http://127.0.0.1:8000/api/extract-text/",
-    //   // "https://fyp.restncode.net/api/extract-text/",
-    //   {
-    //     method: "POST",
-    //     body: formData,
-    //   }
-    // );
-    // if (!response.ok) {
-    //   throw new Error("Failed to process paper");
-    // }
-    // const data = await response.json();
+      await sleep(500);
+      setUploadProgress(55);
 
-    // Simulate realistic processing stages.
-    await sleep(500);
-    setUploadProgress(25);
+      await sleep(450);
+      setUploadProgress(80);
 
-    await sleep(700);
-    setUploadProgress(55);
-
-    await sleep(600);
-    setUploadProgress(80);
-
-    const data = {
-      success: true,
-      extracted_text: {
-        demo_mode: true,
-        generated_at: new Date().toISOString(),
-        total_files: files.length,
-        files: files.map((item, index) => ({
-          file_name: item.file.name,
-          file_type: item.file.type || "application/octet-stream",
-          file_size_bytes: item.file.size,
-          page_count_estimate: 1,
-          extracted_text: `Demo extracted text for ${item.file.name}. This is a simulated OCR output block #${index + 1}.`,
-        })),
-        summary: {
-          status: "completed",
-          note: "Demo response generated in frontend (no backend call).",
-        },
-      },
-    };
-
-    await sleep(400);
-    setUploadProgress(100);
-
-    if (data.success) {
-      const resultText = JSON.stringify(data.extracted_text, null, 2);
-
-      // Persist latest result so /results still works on refresh/direct open.
-      localStorage.setItem("autograde_latest_result", resultText);
+      await extractText(files.map((f) => f.file));
+      setUploadProgress(100);
 
       toast({
         title: "Paper processed successfully!",
-        description: "Demo complete. Redirecting to results...",
+        description: "Redirecting to results...",
       });
 
       setTimeout(() => {
-        navigate("/results", {
-          state: {
-            resultText,
-          },
-        });
-      }, 1200);
-    } else {
-      throw new Error("Processing failed");
-    }
-  } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Something went wrong";
+        navigate("/results");
+      }, 800);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong";
 
-    toast({
-      title: "Upload failed",
-      description: message,
-      variant: "destructive",
-    });
-  } finally {
-    setIsUploading(false);
-  }
-};
+      toast({
+        title: "Upload failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
 
   const getFileIcon = (file: File) => {
@@ -468,15 +418,21 @@ const handleSubmit = async () => {
 
   return (
     <Layout>
-      <div className="container-custom section-padding">
+      <div className="container-custom section-padding relative">
+        <DoodleBackground />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-3xl mx-auto"
+          className="max-w-3xl mx-auto relative"
         >
           {/* Header */}
           <div className="text-center mb-12">
+            <div className="flex justify-center mb-4">
+              <Badge variant="secondary" className="px-4 py-1 text-sm">
+                Student
+              </Badge>
+            </div>
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
               Upload Your <span className="gradient-text">Paper</span>
             </h1>

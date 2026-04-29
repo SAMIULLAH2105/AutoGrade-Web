@@ -1,46 +1,39 @@
-import { useLocation, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppData } from "@/state/AppContext";
+import { DoodleBackground } from "@/components/decor/DoodleBackground";
 
 export default function ResultsPage() {
-  const location = useLocation();
-  const stateResultText = location.state?.resultText as string | undefined;
-  const storedResultText = localStorage.getItem("autograde_latest_result");
-  const rawResultText = stateResultText || storedResultText;
+  const { latestResult, history } = useAppData();
+  const result = latestResult ?? history[0] ?? null;
 
-  let resultData: any = null;
-  if (rawResultText) {
-    try {
-      resultData = JSON.parse(rawResultText);
-    } catch {
-      resultData = null;
-    }
-  }
-
-  if (!resultData) {
+  if (!result) {
     return (
       <Layout>
-        <div className="container-custom section-padding text-center">
-          <p>No result available. Please upload a paper first.</p>
-          <Link to="/upload">
-            <Button className="mt-4">Go to Upload</Button>
-          </Link>
+        <div className="container-custom section-padding max-w-3xl mx-auto relative">
+          <DoodleBackground />
+          <div className="relative text-center">
+            <div className="glass-card p-8">
+              <p className="text-muted-foreground">
+                No result available. Please upload a paper first.
+              </p>
+              <Link to="/upload">
+                <Button variant="hero" className="mt-6">
+                  Go to Upload
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </Layout>
     );
   }
 
-  const evaluationText =
-    typeof resultData?.evaluation === "string"
-      ? resultData.evaluation
-      : Array.isArray(resultData?.files)
-        ? resultData.files
-            .map((file: any) => `${file.file_name}: ${file.extracted_text}`)
-            .join("\n\n")
-        : "";
-  const message = resultData?.message || resultData?.summary?.note || null;
+  const evaluationText = result.evaluation;
+  const message = result.message ?? null;
 
   // Extract score robustly
   const scoreMatch = evaluationText.match(/Score\s*:?\s*\d+\/\d+/i);
@@ -61,20 +54,17 @@ export default function ResultsPage() {
       .filter((line) => line.length > 0);
   }
 
-  const demoLines = Array.isArray(resultData?.files)
-    ? resultData.files.map((file: any) => {
-        const sizeMb = (file.file_size_bytes / 1024 / 1024).toFixed(2);
-        return `${file.file_name} (${sizeMb} MB) - OCR extracted successfully`;
-      })
-    : [];
+  const fileLines = result.file_names.map((name) => `${name} - processed`);
 
   return (
     <Layout>
-      <div className="container-custom section-padding max-w-3xl mx-auto">
+      <div className="container-custom section-padding max-w-3xl mx-auto relative">
+        <DoodleBackground />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="relative"
         >
           {/* Back Button */}
           <Link
@@ -100,7 +90,7 @@ export default function ResultsPage() {
           </div>
 
           {/* Suggestions */}
-          <div className="glass-card p-6 space-y-4">
+          <div className="glass-card-hover p-6 space-y-4">
             <h2 className="font-semibold text-xl mb-2">Suggestions for Improvement:</h2>
             {suggestionLines.length > 0 ? (
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
@@ -108,9 +98,9 @@ export default function ResultsPage() {
                   <li key={idx}>{line}</li>
                 ))}
               </ul>
-            ) : demoLines.length > 0 ? (
+            ) : fileLines.length > 0 ? (
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                {demoLines.map((line, idx) => (
+                {fileLines.map((line, idx) => (
                   <li key={idx}>{line}</li>
                 ))}
               </ul>

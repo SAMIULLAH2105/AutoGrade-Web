@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,25 +7,61 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/layout/Layout";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/state/AppContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from as string | undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
+    // Dummy credentials until backend auth is integrated.
+    // student: student@gmail.com / student123
+    // teacher: teacher@gmail.com / teacher123
     setTimeout(() => {
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPassword = password;
+
+      const isStudent =
+        normalizedEmail === "student@gmail.com" && normalizedPassword === "student123";
+      const isTeacher =
+        normalizedEmail === "teacher@gmail.com" && normalizedPassword === "teacher123";
+
+      if (!isStudent && !isTeacher) {
+        setIsLoading(false);
+        toast({
+          title: "Invalid credentials",
+          description:
+            "Use student@gmail.com / student123 or teacher@gmail.com / teacher123.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      login({
+        id: isStudent ? "student" : "teacher",
+        name: isStudent ? "Samiullah" : "Muneeb Masood",
+        email: normalizedEmail,
+        role: isStudent ? "student" : "teacher",
+      });
+
       setIsLoading(false);
       toast({
-        title: "Login UI Demo",
-        description: "This is a UI-only demo. Backend authentication is handled by Django.",
+        title: "Logged in",
+        description: "Redirecting...",
       });
-    }, 1500);
+      navigate(from || (isTeacher ? "/teacher/upload-batch" : "/upload"), {
+        replace: true,
+      });
+    }, 600);
   };
 
   return (
