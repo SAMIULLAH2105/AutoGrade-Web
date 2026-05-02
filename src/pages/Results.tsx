@@ -83,9 +83,7 @@ export default function ResultsPage() {
             {scoreLine ? (
               <p className="text-lg font-medium">{scoreLine}</p>
             ) : (
-              <p className="text-lg font-medium text-primary">
-                Demo analysis complete
-              </p>
+              <p className="text-lg font-medium text-primary">Result ready</p>
             )}
           </div>
 
@@ -98,6 +96,10 @@ export default function ResultsPage() {
                   <li key={idx}>{line}</li>
                 ))}
               </ul>
+            ) : evaluationText.trim().length > 0 ? (
+              <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
+                {evaluationText}
+              </pre>
             ) : fileLines.length > 0 ? (
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 {fileLines.map((line, idx) => (

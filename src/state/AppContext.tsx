@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { HistoryItem } from "@/types/api";
+import { logoutApi } from "@/services/authApi";
 
 export type UserRole = "student" | "teacher";
 
@@ -15,6 +16,8 @@ export type AuthUser = {
   name: string;
   email: string;
   role: UserRole;
+  token?: string;
+  username?: string;
 };
 
 type AppState = {
@@ -26,7 +29,7 @@ type AppState = {
   history: HistoryItem[];
 };
 
-const STORAGE_KEY = "autograde_app_state_v1";
+const STORAGE_KEY = "autograde_app_state_v2";
 
 const initialState: AppState = {
   auth: { isAuthenticated: false, user: null },
@@ -142,15 +145,15 @@ function safeParseStoredState(raw: string | null): Partial<AppState> | null {
   }
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+function initState(): AppState {
+  // Read persisted state immediately so route guards don't redirect on refresh.
+  const restored = safeParseStoredState(localStorage.getItem(STORAGE_KEY));
+  if (!restored) return initialState;
+  return reducer(initialState, { type: "RESTORE", payload: restored });
+}
 
-  useEffect(() => {
-    const restored = safeParseStoredState(localStorage.getItem(STORAGE_KEY));
-    if (restored) {
-      dispatch({ type: "RESTORE", payload: restored });
-    }
-  }, []);
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialState, initState);
 
   useEffect(() => {
     const toStore: AppState = state;
@@ -187,10 +190,23 @@ export function useAuth() {
     state: { auth },
     actions,
   } = useAppStore();
+
+  const logout = async () => {
+    const token = auth.user?.token;
+    if (token) {
+      try {
+        await logoutApi(token);
+      } catch {
+        // Ignore network errors on logout; always clear local state.
+      }
+    }
+    actions.logout();
+  };
+
   return {
     ...auth,
     login: actions.login,
-    logout: actions.logout,
+    logout,
   };
 }
 

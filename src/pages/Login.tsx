@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, FileCheck } from "lucide-react";
+import { Eye, EyeOff, User, Lock, ArrowRight, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/layout/Layout";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/state/AppContext";
+import { loginApi } from "@/services/authApi";
+
+function inferRoleFromIdentity(value: string): "student" | "teacher" {
+  return value.toLowerCase().includes("teacher") ? "teacher" : "student";
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,45 +28,40 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Dummy credentials until backend auth is integrated.
-    // student: student@gmail.com / student123
-    // teacher: teacher@gmail.com / teacher123
-    setTimeout(() => {
-      const normalizedEmail = email.trim().toLowerCase();
-      const normalizedPassword = password;
-
-      const isStudent =
-        normalizedEmail === "student@gmail.com" && normalizedPassword === "student123";
-      const isTeacher =
-        normalizedEmail === "teacher@gmail.com" && normalizedPassword === "teacher123";
-
-      if (!isStudent && !isTeacher) {
-        setIsLoading(false);
-        toast({
-          title: "Invalid credentials",
-          description:
-            "Use student@gmail.com / student123 or teacher@gmail.com / teacher123.",
-          variant: "destructive",
-        });
-        return;
+    try {
+      const normalizedUsername = username.trim();
+      const response = await loginApi({ username: normalizedUsername, password });
+      if (!response.success) {
+        throw new Error("Login failed");
       }
 
+      const role = inferRoleFromIdentity(response.user.username || normalizedUsername);
+
       login({
-        id: isStudent ? "student" : "teacher",
-        name: isStudent ? "Samiullah" : "Muneeb Masood",
-        email: normalizedEmail,
-        role: isStudent ? "student" : "teacher",
+        id: String(response.user.id),
+        name: response.user.username || response.user.email,
+        username: response.user.username,
+        email: response.user.email,
+        role,
+        token: response.token,
       });
 
-      setIsLoading(false);
       toast({
         title: "Logged in",
         description: "Redirecting...",
       });
-      navigate(from || (isTeacher ? "/teacher/upload-batch" : "/upload"), {
+      navigate(from || (role === "teacher" ? "/teacher/upload-batch" : "/upload"), {
         replace: true,
       });
-    }, 600);
+    } catch (err: unknown) {
+      toast({
+        title: "Login failed",
+        description: err instanceof Error ? err.message : "Unable to login",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -93,17 +93,17 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email */}
+              {/* Username */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="teacher1"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="pl-10 h-12 rounded-xl"
                     required
                   />

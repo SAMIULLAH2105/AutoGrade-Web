@@ -5,16 +5,20 @@ export const API_BASE_URL = normalizeBaseUrl(
     "http://127.0.0.1:8000"
 );
 
-// Default to demo mode until your backend is wired.
-export const DEMO_MODE =
-  ((import.meta.env.VITE_DEMO_MODE as string | undefined) ?? "true") === "true";
-
 export const endpoints = {
-  extractText: `${API_BASE_URL}/api/extract-text/`,
-  userHistory: (userId: string) => `${API_BASE_URL}/api/history/user:${userId}`,
+  // Authentication
+  signup: `${API_BASE_URL}/api/signup/`,
+  login: `${API_BASE_URL}/api/login/`,
+  logout: `${API_BASE_URL}/api/logout/`,
 
-  // Demo placeholders for future work
-  login: `${API_BASE_URL}/api/auth/login/`,
-  signup: `${API_BASE_URL}/api/auth/signup/`,
-  profile: (userId: string) => `${API_BASE_URL}/api/users/${userId}`,
+  // Core
+  history: `${API_BASE_URL}/api/history/`,
+  evaluateAnswer: `${API_BASE_URL}/api/evaluate-answer/`,
+  extractText: `${API_BASE_URL}/api/extract-text/`,
+
+  // Marking scheme / paper management
+  getMarks: `${API_BASE_URL}/api/get-marks/`,
+  uploadMarkingScheme: `${API_BASE_URL}/api/upload-marking-scheme/`,
+  saveMarkingScheme: `${API_BASE_URL}/api/save-marking-scheme/`,
+  manualMarkingScheme: `${API_BASE_URL}/api/manual-marking-scheme/`,
 } as const;

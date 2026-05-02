@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, FileCheck, GraduationCap, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/layout/Layout";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { signupApi } from "@/services/authApi";
+import { useAuth } from "@/state/AppContext";
 
 type UserRole = "student" | "tutor";
+
+function toUsername(name: string, email: string): string {
+  const cleanedName = name.trim().toLowerCase().replace(/\s+/g, "_");
+  const localPart = email.trim().split("@")[0]?.toLowerCase() ?? "";
+  return cleanedName || localPart || "user";
+}
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -19,6 +27,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>("student");
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,14 +44,42 @@ export default function SignupPage() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Signup UI Demo",
-        description: "This is a UI-only demo. Backend authentication is handled by Django.",
+    try {
+      const username = toUsername(name, email);
+      const response = await signupApi({
+        username,
+        email: email.trim(),
+        password,
       });
-    }, 1500);
+
+      if (!response.success) throw new Error("Signup failed");
+
+      const appRole = role === "tutor" ? "teacher" : "student";
+      login({
+        id: String(response.user.id),
+        name: response.user.username || response.user.email,
+        username: response.user.username,
+        email: response.user.email,
+        role: appRole,
+        token: response.token,
+      });
+
+      toast({
+        title: "Account created",
+        description: "Redirecting...",
+      });
+      navigate(appRole === "teacher" ? "/teacher/upload-batch" : "/upload", {
+        replace: true,
+      });
+    } catch (err: unknown) {
+      toast({
+        title: "Signup failed",
+        description: err instanceof Error ? err.message : "Unable to sign up",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

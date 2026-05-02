@@ -369,21 +369,13 @@ export default function UploadPage() {
     setIsUploading(true);
     setUploadProgress(5);
 
-    const sleep = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
-
     try {
-      // Simulated progress stages so the UI feels responsive.
-      await sleep(350);
-      setUploadProgress(25);
-
-      await sleep(500);
-      setUploadProgress(55);
-
-      await sleep(450);
-      setUploadProgress(80);
+      // Stage 1: extract + stage 2: evaluate can take time.
+      setUploadProgress(15);
 
       await extractText(files.map((f) => f.file));
+
+      setUploadProgress(95);
       setUploadProgress(100);
 
       toast({
