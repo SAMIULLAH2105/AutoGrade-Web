@@ -21,10 +21,34 @@ export type LogoutApiResponse = {
   message?: string;
 };
 
+export type ExtractTextEvaluationQuestion = {
+  question_id: string;
+  question_text: string;
+  answer_text: string;
+  score: string;
+  total_score: number;
+  source: string;
+  comments: string;
+};
+
+export type ExtractTextEvaluation = {
+  success: boolean;
+  source: string;
+  total_score: number;
+  questions: ExtractTextEvaluationQuestion[];
+  message?: string;
+};
+
+export type ExtractTextResultItem = {
+  file_name: string;
+  content_type: string;
+  extracted_text: string;
+  evaluation?: ExtractTextEvaluation;
+};
+
 export type ExtractTextApiResponse = {
   success: boolean;
-  extracted_text: string;
-  question_text?: string;
+  results: ExtractTextResultItem[];
   message?: string;
 };
 

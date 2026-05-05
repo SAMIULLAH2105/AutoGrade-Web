@@ -139,8 +139,31 @@ Base path: `/api/`
 ```json
 {
   "success": true,
-  "extracted_text": "Extracted handwritten text...",
-  "message": "Text extracted successfully."
+  "results": [
+    {
+      "file_name": "paper.pdf",
+      "content_type": "application/pdf",
+      "extracted_text": "--- Page 1 ---\n...",
+      "evaluation": {
+        "success": true,
+        "source": "multi_question",
+        "total_score": 1,
+        "questions": [
+          {
+            "question_id": "...",
+            "question_text": "",
+            "answer_text": "...",
+            "score": "1/1",
+            "total_score": 1,
+            "source": "pinecone",
+            "comments": "Breakdown: ...\nSuggestions for Improvement: ..."
+          }
+        ],
+        "message": "Evaluated extracted text."
+      }
+    }
+  ],
+  "message": "Files processed successfully."
 }
 ```
 - Error responses:

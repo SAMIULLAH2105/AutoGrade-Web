@@ -294,7 +294,7 @@
 //     </Layout>
 //   );
 // }
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -305,6 +305,8 @@ import {
   Loader2,
   AlertCircle,
   Image,
+  Database,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
@@ -324,8 +326,70 @@ export default function UploadPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [activeProcessingStep, setActiveProcessingStep] = useState(0);
+  const processingTimeoutsRef = useRef<number[]>([]);
   const navigate = useNavigate();
   const { extractText } = usePaperApi();
+
+  const processingSteps = [
+    {
+      key: "extract",
+      title: "Text Extraction",
+      subtitle: "Reading your PDF/images",
+      Icon: FileText,
+    },
+    {
+      key: "pinecone",
+      title: "Pinecone",
+      subtitle: "Finding the right marking points",
+      Icon: Database,
+    },
+    {
+      key: "gemini",
+      title: "Gemini",
+      subtitle: "Understanding the answer",
+      Icon: Sparkles,
+    },
+    {
+      key: "evaluation",
+      title: "Evaluation",
+      subtitle: "Scoring and feedback",
+      Icon: CheckCircle2,
+    },
+  ] as const;
+
+  const clearProcessingTimeouts = () => {
+    for (const id of processingTimeoutsRef.current) {
+      window.clearTimeout(id);
+    }
+    processingTimeoutsRef.current = [];
+  };
+
+  const startProcessingAnimation = () => {
+    clearProcessingTimeouts();
+    setActiveProcessingStep(0);
+    setUploadProgress(10);
+
+    // We don't get real-time backend progress, so we animate a plausible flow.
+    processingTimeoutsRef.current.push(
+      window.setTimeout(() => {
+        setActiveProcessingStep(1);
+        setUploadProgress(30);
+      }, 900)
+    );
+    processingTimeoutsRef.current.push(
+      window.setTimeout(() => {
+        setActiveProcessingStep(2);
+        setUploadProgress(55);
+      }, 2500)
+    );
+    processingTimeoutsRef.current.push(
+      window.setTimeout(() => {
+        setActiveProcessingStep(3);
+        setUploadProgress(75);
+      }, 4500)
+    );
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
@@ -367,13 +431,16 @@ export default function UploadPage() {
     }
 
     setIsUploading(true);
-    setUploadProgress(5);
+    startProcessingAnimation();
+
+    let succeeded = false;
 
     try {
-      // Stage 1: extract + stage 2: evaluate can take time.
-      setUploadProgress(15);
-
       await extractText(files.map((f) => f.file));
+
+      succeeded = true;
+      clearProcessingTimeouts();
+      setActiveProcessingStep(processingSteps.length - 1);
 
       setUploadProgress(95);
       setUploadProgress(100);
@@ -384,6 +451,7 @@ export default function UploadPage() {
       });
 
       setTimeout(() => {
+        setIsUploading(false);
         navigate("/results");
       }, 800);
     } catch (error: unknown) {
@@ -396,7 +464,8 @@ export default function UploadPage() {
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      clearProcessingTimeouts();
+      if (!succeeded) setIsUploading(false);
     }
   };
 
@@ -516,6 +585,82 @@ export default function UploadPage() {
                   className="h-full gradient-bg"
                   style={{ width: `${uploadProgress}%` }}
                 />
+              </div>
+
+              {/* Fancy flow */}
+              <div className="mt-6 grid gap-3">
+                {processingSteps.map((step, idx) => {
+                  const status =
+                    idx < activeProcessingStep
+                      ? "done"
+                      : idx === activeProcessingStep
+                        ? "active"
+                        : "todo";
+
+                  const Icon = step.Icon;
+
+                  return (
+                    <motion.div
+                      key={step.key}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: status === "todo" ? 0.5 : 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <div
+                          className={
+                            "h-9 w-9 rounded-full flex items-center justify-center border bg-background" +
+                            (status === "active"
+                              ? " border-primary"
+                              : status === "done"
+                                ? " border-primary/50"
+                                : " border-border")
+                          }
+                        >
+                          <Icon
+                            className={
+                              "h-4 w-4" +
+                              (status === "active"
+                                ? " text-primary"
+                                : status === "done"
+                                  ? " text-primary"
+                                  : " text-muted-foreground")
+                            }
+                          />
+                        </div>
+
+                        {status === "active" && (
+                          <motion.div
+                            className="absolute -inset-1 rounded-full border border-primary/40"
+                            animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.08, 1] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                          />
+                        )}
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <p
+                            className={
+                              "text-sm font-medium" +
+                              (status === "todo" ? " text-muted-foreground" : "")
+                            }
+                          >
+                            {step.title}
+                          </p>
+                          {status === "done" && (
+                            <span className="text-xs text-muted-foreground">Done</span>
+                          )}
+                          {status === "active" && (
+                            <span className="text-xs text-primary">In progress</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{step.subtitle}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           )}
