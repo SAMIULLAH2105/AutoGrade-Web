@@ -1,62 +1,71 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, FileArchive, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, X, Loader2, CheckCircle2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { usePaperApi } from "@/services/usePaperApi";
 import { useNavigate } from "react-router-dom";
 import { DoodleBackground } from "@/components/decor/DoodleBackground";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface UploadedZip {
+interface UploadedPaper {
   file: File;
   id: string;
 }
 
 export default function TeacherUploadBatchPage() {
-  const [batchTitle, setBatchTitle] = useState("");
-  const [zip, setZip] = useState<UploadedZip | null>(null);
+  const [files, setFiles] = useState<UploadedPaper[]>([]);
+  const [subject, setSubject] = useState<"isl" | "chem" | "math" | "physics" | "">("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { extractBatchZip } = usePaperApi();
+  const { extractText } = usePaperApi();
   const navigate = useNavigate();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (!file) return;
-    setZip({ file, id: crypto.randomUUID() });
+    const newFiles = acceptedFiles.map((file) => ({
+      file,
+      id: crypto.randomUUID(),
+    }));
+    setFiles((prev) => [...prev, ...newFiles]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    multiple: false,
+    multiple: true,
     accept: {
-      "application/zip": [".zip"],
-      "application/x-zip-compressed": [".zip"],
+      "application/pdf": [".pdf"],
     },
-    maxSize: 50 * 1024 * 1024, // 50MB
+    maxSize: 20 * 1024 * 1024, // 20MB
   });
 
-  const removeZip = () => setZip(null);
+  const removeFile = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
 
   const handleSubmit = async () => {
-    if (!batchTitle.trim()) {
+    if (!subject) {
       toast({
-        title: "Missing title",
-        description: "Please enter a batch title (e.g. Section A Quiz 1).",
+        title: "Subject required",
+        description: "Please select a subject before submitting.",
         variant: "destructive",
       });
       return;
     }
 
-    if (!zip) {
+    if (files.length === 0) {
       toast({
-        title: "No zip selected",
-        description: "Please upload a .zip containing multiple papers.",
+        title: "No files selected",
+        description: "Please upload one or more PDFs.",
         variant: "destructive",
       });
       return;
@@ -77,11 +86,14 @@ export default function TeacherUploadBatchPage() {
       await sleep(450);
       setUploadProgress(80);
 
-      await extractBatchZip({ zipFile: zip.file, title: batchTitle.trim() });
+      await extractText(
+        files.map((f) => f.file),
+        { subject }
+      );
 
       setUploadProgress(100);
       toast({
-        title: "Batch uploaded",
+        title: "Batch processed",
         description: "Redirecting to history...",
       });
 
@@ -119,20 +131,27 @@ export default function TeacherUploadBatchPage() {
               Upload <span className="gradient-text">Batch</span>
             </h1>
             <p className="text-muted-foreground">
-              Upload a zip containing multiple papers and label it for easy history tracking.
+              Upload multiple PDFs to evaluate and save to history.
             </p>
           </div>
 
           <div className="glass-card p-6 mb-6">
-            <Label htmlFor="batchTitle">Batch title</Label>
-            <Input
-              id="batchTitle"
-              placeholder="Software Engineering - Section A - Quiz 1"
-              value={batchTitle}
-              onChange={(e) => setBatchTitle(e.target.value)}
+            <Label htmlFor="subject">Subject</Label>
+            <Select
+              value={subject}
+              onValueChange={(v) => setSubject(v as typeof subject)}
               disabled={isUploading}
-              className="mt-2"
-            />
+            >
+              <SelectTrigger id="subject" className="mt-2">
+                <SelectValue placeholder="Select subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="isl">Islamiat</SelectItem>
+                <SelectItem value="chem">Chemistry</SelectItem>
+                <SelectItem value="math">Mathematics</SelectItem>
+                <SelectItem value="physics">Physics</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <motion.div>
@@ -150,43 +169,47 @@ export default function TeacherUploadBatchPage() {
                 <Upload className="w-9 h-9 text-primary-foreground" />
               </div>
               <h3 className="font-display text-xl font-semibold mb-2">
-                {isDragActive ? "Drop the zip here" : "Drag & drop a .zip"}
+                {isDragActive ? "Drop the PDFs here" : "Drag & drop PDFs"}
               </h3>
               <p className="text-muted-foreground">or click to browse</p>
               <div className="mt-4 text-sm text-muted-foreground">
-                <span className="px-2 py-1 rounded-lg bg-muted">ZIP</span>
-                <span className="text-muted-foreground/60"> • Max 50MB</span>
+                <span className="px-2 py-1 rounded-lg bg-muted">PDF</span>
+                <span className="text-muted-foreground/60"> • Max 20MB each</span>
               </div>
             </div>
           </motion.div>
 
           <AnimatePresence>
-            {zip && (
+            {files.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="mt-6"
               >
-                <div className="glass-card p-4 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                    <FileArchive className="w-7 h-7 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{zip.file.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(zip.file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={removeZip}
-                    disabled={isUploading}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
+                <div className="space-y-3">
+                  {files.map((f) => (
+                    <div key={f.id} className="glass-card p-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                        <FileText className="w-7 h-7 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{f.file.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(f.file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(f.id)}
+                        disabled={isUploading}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             )}
@@ -209,7 +232,7 @@ export default function TeacherUploadBatchPage() {
               variant="hero"
               size="xl"
               onClick={handleSubmit}
-              disabled={!zip || !batchTitle.trim() || isUploading}
+              disabled={files.length === 0 || !subject || isUploading}
             >
               {isUploading ? (
                 <>

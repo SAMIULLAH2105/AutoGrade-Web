@@ -91,6 +91,9 @@ export function usePaperApi() {
     async (
       files: File[],
       options: {
+        subject?: "isl" | "chem" | "math" | "physics";
+        question_text?: string;
+        evaluate?: boolean;
         paper_id?: string;
         paper_code?: string;
         paper_number?: string;
@@ -98,62 +101,61 @@ export function usePaperApi() {
     ): Promise<HistoryItem> => {
       if (!user) throw new Error("Not authenticated");
       if (!files.length) throw new Error("No files provided");
+      if (!options.subject) throw new Error("Subject is required");
 
       const token = user.token;
 
-      // Backend contract: single `file` field per request.
-      const parts: Array<{
-        fileName: string;
-        extracted: string;
-        extractionMessage?: string;
-        evaluationText?: string;
-      }> = [];
-
+      // Backend supports multiple files in one request: request.FILES.getlist('file')
+      const formData = new FormData();
       for (const file of files) {
-        const formData = new FormData();
         formData.append("file", file);
+      }
+      formData.append("subject", options.subject);
+      if (typeof options.evaluate === "boolean") {
+        // server accepts boolean/string; send string to be explicit in multipart
+        formData.append("evaluate", options.evaluate ? "true" : "false");
+      }
+      if (options.question_text?.trim()) {
+        formData.append("question_text", options.question_text.trim());
+      }
+      if (options.paper_id?.trim()) formData.append("paper_id", options.paper_id.trim());
+      if (options.paper_code?.trim()) formData.append("paper_code", options.paper_code.trim());
+      if (options.paper_number?.trim()) formData.append("paper_number", options.paper_number.trim());
 
-        const r = await fetchJson<ExtractTextApiResponse>(endpoints.extractText, {
-          method: "POST",
-          headers: authHeader(token),
-          body: formData,
-        });
+      const r = await fetchJson<ExtractTextApiResponse>(endpoints.extractText, {
+        method: "POST",
+        headers: authHeader(token),
+        body: formData,
+      });
 
-        if (!r.success) {
-          throw new Error(r.message || "Text extraction failed");
-        }
-
-        const first = r.results?.[0];
-        if (!first) throw new Error("No results returned from extract-text API");
-
-        parts.push({
-          fileName: first.file_name || file.name,
-          extracted: first.extracted_text,
-          evaluationText: formatExtractEvaluation(first),
-          extractionMessage: r.message || first.evaluation?.message,
-        });
+      if (!r.success) {
+        throw new Error(r.message || "Text extraction failed");
       }
 
+      const results = r.results ?? [];
+      if (results.length === 0) throw new Error("No results returned from extract-text API");
+
       const combinedEvaluationText =
-        parts.length === 1
-          ? parts[0]!.evaluationText || ""
-          : parts
-              .map((p) => `=== ${p.fileName} ===\n${p.evaluationText || ""}`)
+        results.length === 1
+          ? formatExtractEvaluation(results[0]!)
+          : results
+              .map((res) => `=== ${res.file_name} ===\n${formatExtractEvaluation(res)}`)
               .join("\n\n");
+
+      const responseMessage =
+        r.message || results.map((res) => res.evaluation?.message).find(Boolean) || undefined;
 
       const item: HistoryItem = {
         id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
         user_id: user.id,
-        file_names: files.map((f) => f.name),
+        file_names: results.map((res) => res.file_name) || files.map((f) => f.name),
         evaluation: combinedEvaluationText,
-        message:
-          parts.map((p) => p.extractionMessage).find(Boolean) ||
-          "Evaluation completed successfully.",
+        message: responseMessage || "Files processed successfully.",
         paper_id: options.paper_id,
         paper_code: options.paper_code,
         paper_number: options.paper_number,
-        raw: { extractionParts: parts },
+        raw: r,
       };
 
       setLatestResult(item);

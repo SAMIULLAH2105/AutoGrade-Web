@@ -315,6 +315,14 @@ import { toast } from "@/hooks/use-toast";
 import { usePaperApi } from "@/services/usePaperApi";
 import { DoodleBackground } from "@/components/decor/DoodleBackground";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface UploadedFile {
   file: File;
@@ -328,6 +336,7 @@ export default function UploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [activeProcessingStep, setActiveProcessingStep] = useState(0);
   const processingTimeoutsRef = useRef<number[]>([]);
+  const [subject, setSubject] = useState<"isl" | "chem" | "math" | "physics" | "">("");
   const navigate = useNavigate();
   const { extractText } = usePaperApi();
 
@@ -430,13 +439,22 @@ export default function UploadPage() {
       return;
     }
 
+    if (!subject) {
+      toast({
+        title: "Subject required",
+        description: "Please select a subject before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
     startProcessingAnimation();
 
     let succeeded = false;
 
     try {
-      await extractText(files.map((f) => f.file));
+      await extractText(files.map((f) => f.file), { subject });
 
       succeeded = true;
       clearProcessingTimeouts();
@@ -504,6 +522,25 @@ export default function UploadPage() {
           </div>
 
           {/* Dropzone */}
+          <div className="glass-card p-6 mb-6">
+            <Label htmlFor="subject">Subject</Label>
+            <Select
+              value={subject}
+              onValueChange={(v) => setSubject(v as typeof subject)}
+              disabled={isUploading}
+            >
+              <SelectTrigger id="subject" className="mt-2">
+                <SelectValue placeholder="Select subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="isl">Islamiat</SelectItem>
+                <SelectItem value="chem">Chemistry</SelectItem>
+                <SelectItem value="math">Mathematics</SelectItem>
+                <SelectItem value="physics">Physics</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <motion.div>
             <div
               {...getRootProps()}
@@ -671,7 +708,7 @@ export default function UploadPage() {
               variant="hero"
               size="xl"
               onClick={handleSubmit}
-              disabled={files.length === 0 || isUploading}
+              disabled={files.length === 0 || !subject || isUploading}
             >
               {isUploading ? (
                 <>
