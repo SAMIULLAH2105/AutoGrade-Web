@@ -43,7 +43,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <nav className="container-custom">
-        <div className="mt-4 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-lg">
+        <div className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">

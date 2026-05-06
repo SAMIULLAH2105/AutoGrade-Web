@@ -15,7 +15,7 @@ const NotFound = () => {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-4">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
         <FadeIn className="text-center" y={12}>
           <div className="font-display text-8xl font-bold gradient-text mb-4">404</div>
           <h1 className="font-display text-2xl font-semibold mb-2">Page Not Found</h1>

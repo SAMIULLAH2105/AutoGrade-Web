@@ -119,76 +119,98 @@ export default function Landing() {
         </div>
 
         <div className="container-custom relative ">
-          <div className="section-padding flex flex-col items-center text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8"
-            >
-              <Sparkles className="w-4 h-4" />
-              AI-Powered Paper Checking
-            </motion.div>
+          <div className="py-4 sm:py-6 lg:py-8 grid lg:grid-cols-2 gap-y-6 lg:gap-y-0 gap-x-10 lg:gap-x-16 items-center">
+            {/* Copy */}
+            <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6"
+              >
+                <Sparkles className="w-4 h-4" />
+                AI-Powered Paper Checking
+              </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold max-w-4xl leading-tight"
-            >
-              Instant O & A Level{" "}
-              <span className="gradient-text">Paper Checking</span> Powered by
-              AI
-            </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold max-w-4xl leading-tight"
+              >
+                Instant O & A Level{" "}
+                <span className="gradient-text">Paper Checking</span> Powered by
+                AI
+              </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl text-balance"
-            >
-              Upload your exam papers and get instant, accurate feedback.
-              Perfect for students preparing for exams and tutors streamlining
-              their workflow.
-            </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl text-balance"
+              >
+                Upload your exam papers and get instant, accurate feedback.
+                Perfect for students preparing for exams and tutors streamlining
+                their workflow.
+              </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-10 flex flex-col sm:flex-row gap-4"
-            >
-              <Link to="/upload">
-                <Button variant="hero" size="xl" className="group">
-                  <Upload className="w-5 h-5" />
-                  Upload Paper
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-              <Link to="/signup">
-                <Button variant="hero-outline" size="xl">
-                  Get Started Free
-                </Button>
-              </Link>
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="mt-8 flex flex-col sm:flex-row gap-4"
+              >
+                <Link to="/upload">
+                  <Button variant="hero" size="xl" className="group">
+                    <Upload className="w-5 h-5" />
+                    Upload Paper
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="hero-outline" size="xl">
+                    Get Started Free
+                  </Button>
+                </Link>
+              </motion.div>
 
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16"
-            >
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="font-display text-3xl sm:text-4xl font-bold gradient-text">
-                    {stat.value}
+              {/* Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 w-full"
+              >
+                {stats.map((stat, index) => (
+                  <div key={index} className="text-center lg:text-left">
+                    <div className="font-display text-2xl sm:text-3xl font-bold gradient-text">
+                      {stat.value}
+                    </div>
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {stat.label}
+                    </div>
                   </div>
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Hero Image */}
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="mx-auto w-full max-w-xs sm:max-w-sm lg:max-w-md"
+            >
+              <img
+                src="/mobile-light.png"
+                alt="Mobile preview"
+                className="w-full h-auto block dark:hidden"
+              />
+              <img
+                src="/mobile.png"
+                alt="Mobile preview"
+                className="w-full h-auto hidden dark:block"
+              />
             </motion.div>
           </div>
         </div>
@@ -216,9 +238,12 @@ export default function Landing() {
               >
                 {/* Connector line */}
                 {index < howItWorks.length - 1 && (
-                  <div className="hidden md:flex items-center absolute top-1/2 -right-6">
-                    <div className="w-8 border-t-2 border-y-3 border-gray-600"></div>
-                    <div className="w-3 h-3 border-t-4 border-r-4 border-purple-500 rotate-45 -ml-1"></div>
+                  <div
+                    aria-hidden
+                    className="hidden md:flex items-center absolute top-1/2 -right-8 translate-x-1/2 -translate-y-1/2"
+                  >
+                    <div className="w-10 h-px bg-border" />
+                    <ArrowRight className="w-4 h-4 text-primary ml-2" />
                   </div>
                 )}
 

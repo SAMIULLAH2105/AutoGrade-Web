@@ -117,9 +117,7 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} PaperCheck. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Made with ❤️ for students & tutors
-          </p>
+          
         </div>
       </div>
     </footer>
