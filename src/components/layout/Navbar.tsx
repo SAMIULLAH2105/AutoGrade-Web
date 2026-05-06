@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon, FileCheck, Upload } from "lucide-react";
+import { Menu, X, Sun, Moon, FileCheck, Upload, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/state/AppContext";
@@ -12,6 +18,11 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
+
+  const userInitial = (
+    (user?.name?.trim() || user?.email || "").trim().charAt(0).toUpperCase() ||
+    "?"
+  );
 
   const navLinks: Array<{ href: string; label: string; disabled?: boolean }> =
     !isAuthenticated
@@ -98,12 +109,27 @@ export function Navbar() {
               <div className="hidden sm:flex items-center gap-2">
                 {isAuthenticated ? (
                   <>
-                    <span className="text-sm text-muted-foreground hidden md:inline">
-                      {user?.name?.trim() || user?.email}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={logout}>
-                      Log out
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="User menu"
+                          className="hidden md:inline-flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background text-sm font-semibold"
+                        >
+                          {userInitial}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            logout();
+                          }}
+                        >
+                          Log out
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </>
                 ) : (
                   <>
@@ -180,8 +206,9 @@ export function Navbar() {
                           logout();
                           setIsOpen(false);
                         }}
+                        aria-label="Log out"
                       >
-                        Log out
+                        <LogOut className="w-4 h-4" />
                       </Button>
                     ) : (
                       <>

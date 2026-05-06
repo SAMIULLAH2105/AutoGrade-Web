@@ -6,6 +6,7 @@ import { useAppData } from "@/state/AppContext";
 import { usePaperApi } from "@/services/usePaperApi";
 import { DoodleBackground } from "@/components/decor/DoodleBackground";
 import { useAuth } from "@/state/AppContext";
+import { FadeIn, Stagger, StaggerItem } from "@/components/ui/motion";
 
 function extractScoreLine(text: string): string {
   const match = text.match(/Score\s*:?\s*\d+\/\d+/i);
@@ -50,7 +51,7 @@ export default function HistoryPage() {
     <Layout>
       <div className="container-custom section-padding max-w-4xl mx-auto relative">
         <DoodleBackground />
-        <div className="relative">
+        <FadeIn className="relative">
           <h1 className="font-display text-3xl font-bold mb-2">History</h1>
           <p className="text-muted-foreground mb-8">Your previously checked papers.</p>
 
@@ -69,11 +70,14 @@ export default function HistoryPage() {
               <p className="text-muted-foreground">No history yet.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <Stagger className="space-y-4">
               {items.map((item) => {
                 const scoreLine = extractScoreLine(item.evaluation);
                 return (
-                  <div key={item.id} className="glass-card-hover p-6">
+                  <StaggerItem
+                    key={item.id}
+                    className="glass-card-hover p-6"
+                  >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <div>
                         <p className="font-medium">
@@ -101,10 +105,10 @@ export default function HistoryPage() {
                         {item.evaluation}
                       </pre>
                     </details>
-                  </div>
+                  </StaggerItem>
                 );
               })}
-            </div>
+            </Stagger>
           )}
 
           <div className="mt-10">
@@ -112,7 +116,7 @@ export default function HistoryPage() {
               <Link to={uploadHref}>{uploadCta}</Link>
             </Button>
           </div>
-        </div>
+        </FadeIn>
       </div>
     </Layout>
   );

@@ -152,6 +152,7 @@ export function usePaperApi() {
         file_names: results.map((res) => res.file_name) || files.map((f) => f.name),
         evaluation: combinedEvaluationText,
         message: responseMessage || "Files processed successfully.",
+        extract_results: results,
         paper_id: options.paper_id,
         paper_code: options.paper_code,
         paper_number: options.paper_number,

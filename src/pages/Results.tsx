@@ -5,6 +5,24 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/state/AppContext";
 import { DoodleBackground } from "@/components/decor/DoodleBackground";
+import type { ExtractTextResultItem } from "@/types/api";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+
+function parseScore(score: string | undefined): { earned: number; outOf: number } | null {
+  if (!score) return null;
+  const match = score.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!match) return null;
+  return { earned: Number(match[1]), outOf: Number(match[2]) };
+}
+
+function scoreBadgeVariant(score: string | undefined): "default" | "secondary" | "destructive" {
+  const parsed = parseScore(score);
+  if (!parsed || parsed.outOf <= 0) return "secondary";
+  if (parsed.earned <= 0) return "destructive";
+  if (parsed.earned < parsed.outOf) return "secondary";
+  return "default";
+}
 
 export default function ResultsPage() {
   const { latestResult, history } = useAppData();
@@ -34,27 +52,7 @@ export default function ResultsPage() {
 
   const evaluationText = result.evaluation;
   const message = result.message ?? null;
-
-  // Extract score robustly
-  const scoreMatch = evaluationText.match(/Score\s*:?\s*\d+\/\d+/i);
-  const scoreLine = scoreMatch ? scoreMatch[0] : "";
-
-  // Extract suggestions flexibly
-  let suggestionLines: string[] = [];
-  const suggestionIndex = evaluationText.search(/Suggestions for Improvement:/i);
-  if (suggestionIndex !== -1) {
-    const suggestionsText = evaluationText
-      .substring(suggestionIndex + "Suggestions for Improvement:".length)
-      .trim();
-
-    // Split by newline and filter lines that are not empty
-    suggestionLines = suggestionsText
-      .split(/\r?\n/)
-      .map((line) => line.replace(/^\*+\s*/, "").trim()) // remove bullets
-      .filter((line) => line.length > 0);
-  }
-
-  const fileLines = result.file_names.map((name) => `${name} - processed`);
+  const extractResults: ExtractTextResultItem[] | undefined = result.extract_results;
 
   return (
     <Layout>
@@ -80,36 +78,107 @@ export default function ResultsPage() {
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
               Your <span className="gradient-text">Evaluation</span>
             </h1>
-            {scoreLine ? (
-              <p className="text-lg font-medium">{scoreLine}</p>
-            ) : (
-              <p className="text-lg font-medium text-primary">Result ready</p>
-            )}
+            <p className="text-lg font-medium text-primary">Result ready</p>
           </div>
 
-          {/* Suggestions */}
-          <div className="glass-card-hover p-6 space-y-4">
-            <h2 className="font-semibold text-xl mb-2">Suggestions for Improvement:</h2>
-            {suggestionLines.length > 0 ? (
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                {suggestionLines.map((line, idx) => (
-                  <li key={idx}>{line}</li>
-                ))}
-              </ul>
-            ) : evaluationText.trim().length > 0 ? (
-              <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
-                {evaluationText}
-              </pre>
-            ) : fileLines.length > 0 ? (
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                {fileLines.map((line, idx) => (
-                  <li key={idx}>{line}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground">No suggestions available.</p>
-            )}
-          </div>
+          {/* Structured results (preferred) */}
+          {extractResults && extractResults.length > 0 ? (
+            <div className="glass-card-hover p-6">
+              <Accordion type="multiple" className="w-full">
+                {extractResults.map((file, idx) => {
+                  const evalObj = file.evaluation;
+                  const questions = evalObj?.questions ?? [];
+
+                  return (
+                    <AccordionItem
+                      key={`${file.file_name}-${idx}`}
+                      value={`${file.file_name}-${idx}`}
+                    >
+                      <AccordionTrigger>
+                        <div className="flex flex-1 items-center justify-between gap-3 pr-3">
+                          <div className="min-w-0 text-left">
+                            <div className="font-semibold truncate">{file.file_name}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {file.content_type}
+                            </div>
+                          </div>
+                          {typeof evalObj?.total_score === "number" ? (
+                            <Badge variant="secondary">Total: {evalObj.total_score}</Badge>
+                          ) : null}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {questions.length > 0 ? (
+                          <div className="space-y-4">
+                            {questions.map((q) => (
+                              <div key={q.question_id} className="glass-card p-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <div className="font-medium truncate">Question ID: {q.question_id}</div>
+                                    {q.source ? (
+                                      <div className="text-xs text-muted-foreground">Source: {q.source}</div>
+                                    ) : null}
+                                  </div>
+                                  {q.score ? (
+                                    <Badge variant={scoreBadgeVariant(q.score)}>{q.score}</Badge>
+                                  ) : null}
+                                </div>
+
+                                {q.answer_text?.trim() ? (
+                                  <div className="mt-3">
+                                    <div className="text-sm font-semibold mb-1">Answer</div>
+                                    <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
+                                      {q.answer_text}
+                                    </pre>
+                                  </div>
+                                ) : null}
+
+                                {q.comments?.trim() ? (
+                                  <div className="mt-3">
+                                    <div className="text-sm font-semibold mb-1">Feedback</div>
+                                    <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
+                                      {q.comments}
+                                    </pre>
+                                  </div>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                            No question-level evaluation returned for this file.
+                          </div>
+                        )}
+
+                        {file.extracted_text?.trim() ? (
+                          <details className="mt-4">
+                            <summary className="cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground transition-colors">
+                              View extracted text
+                            </summary>
+                            <pre className="mt-3 whitespace-pre-wrap text-xs text-muted-foreground">
+                              {file.extracted_text}
+                            </pre>
+                          </details>
+                        ) : null}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </div>
+          ) : (
+            /* Fallback (legacy text evaluation) */
+            <div className="glass-card-hover p-6 space-y-4">
+              <h2 className="font-semibold text-xl mb-2">Evaluation</h2>
+              {evaluationText.trim().length > 0 ? (
+                <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {evaluationText}
+                </pre>
+              ) : (
+                <p className="text-muted-foreground">No evaluation available.</p>
+              )}
+            </div>
+          )}
 
           {/* Optional message */}
           {message && (

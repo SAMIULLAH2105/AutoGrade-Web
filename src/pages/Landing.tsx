@@ -15,20 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
-};
-
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+import { Reveal, RevealStagger, StaggerItem } from "@/components/ui/motion";
 
 const features = [
   {
@@ -210,45 +197,21 @@ export default function Landing() {
       {/* How It Works */}
       <section className="bg-background section-padding">
         <div className="container-custom">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.span
-              variants={fadeInUp}
-              className="text-primary font-medium"
-            >
-              Simple Process
-            </motion.span>
-            <motion.h2
-              variants={fadeInUp}
-              className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2"
-            >
+          <Reveal className="text-center mb-16" margin="-100px">
+            <span className="text-primary font-medium">Simple Process</span>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
               How It Works
-            </motion.h2>
-            <motion.p
-              variants={fadeInUp}
-              className="mt-4 text-muted-foreground max-w-2xl mx-auto"
-            >
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
               Three simple steps to get your papers checked and receive
               comprehensive feedback.
-            </motion.p>
-          </motion.div>
+            </p>
+          </Reveal>
 
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-8"
-          >
+          <RevealStagger className="grid md:grid-cols-3 gap-8" margin="-100px">
             {howItWorks.map((item, index) => (
-              <motion.div
+              <StaggerItem
                 key={index}
-                variants={fadeInUp}
                 className="relative glass-card-hover p-8 text-center"
               >
                 {/* Connector line */}
@@ -269,53 +232,32 @@ export default function Landing() {
                   {item.title}
                 </h3>
                 <p className="text-muted-foreground">{item.description}</p>
-              </motion.div>
+              </StaggerItem>
             ))}
-          </motion.div>
+          </RevealStagger>
         </div>
       </section>
 
       {/* Features */}
       <section id="features" className="bg-muted/50 section-padding">
         <div className="container-custom">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.span
-              variants={fadeInUp}
-              className="text-primary font-medium"
-            >
-              Why Choose Us
-            </motion.span>
-            <motion.h2
-              variants={fadeInUp}
-              className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2"
-            >
+          <Reveal className="text-center mb-16" margin="-100px">
+            <span className="text-primary font-medium">Why Choose Us</span>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
               Powerful Features
-            </motion.h2>
-            <motion.p
-              variants={fadeInUp}
-              className="mt-4 text-muted-foreground max-w-2xl mx-auto"
-            >
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
               Everything you need to excel in your O & A Level exams.
-            </motion.p>
-          </motion.div>
+            </p>
+          </Reveal>
 
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
+          <RevealStagger
             className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            margin="-100px"
           >
             {features.map((feature, index) => (
-              <motion.div
+              <StaggerItem
                 key={index}
-                variants={fadeInUp}
                 className="glass-card-hover p-6"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
@@ -327,23 +269,17 @@ export default function Landing() {
                 <p className="text-sm text-muted-foreground">
                   {feature.description}
                 </p>
-              </motion.div>
+              </StaggerItem>
             ))}
-          </motion.div>
+          </RevealStagger>
         </div>
       </section>
 
       {/* Who It's For */}
       <section className="bg-background section-padding">
         <div className="container-custom">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="grid lg:grid-cols-2 gap-12 items-center"
-          >
-            <motion.div variants={fadeInUp}>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <Reveal margin="-100px">
               <span className="text-primary font-medium">Who It's For</span>
               <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2 mb-6">
                 Built for Students & Tutors
@@ -384,9 +320,9 @@ export default function Landing() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </Reveal>
 
-            <motion.div variants={fadeInUp} className="grid grid-cols-2 gap-4">
+            <Reveal className="grid grid-cols-2 gap-4" margin="-100px" delay={0.06}>
               <div className="space-y-4">
                 <div className="glass-card p-6 rounded-2xl">
                   <Users className="w-8 h-8 text-primary mb-3" />
@@ -415,46 +351,25 @@ export default function Landing() {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </Reveal>
+          </div>
         </div>
       </section>
 
       {/* Testimonials */}
       <section className="bg-muted/50 section-padding">
         <div className="container-custom">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="text-center mb-16"
-          >
-            <motion.span
-              variants={fadeInUp}
-              className="text-primary font-medium"
-            >
-              Testimonials
-            </motion.span>
-            <motion.h2
-              variants={fadeInUp}
-              className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2"
-            >
+          <Reveal className="text-center mb-16" margin="-100px">
+            <span className="text-primary font-medium">Testimonials</span>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
               What Our Users Say
-            </motion.h2>
-          </motion.div>
+            </h2>
+          </Reveal>
 
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-6"
-          >
+          <RevealStagger className="grid md:grid-cols-3 gap-6" margin="-100px">
             {testimonials.map((testimonial, index) => (
-              <motion.div
+              <StaggerItem
                 key={index}
-                variants={fadeInUp}
                 className="glass-card-hover p-6"
               >
                 <Quote className="w-8 h-8 text-primary/30 mb-4" />
@@ -470,20 +385,18 @@ export default function Landing() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </StaggerItem>
             ))}
-          </motion.div>
+          </RevealStagger>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="bg-background section-padding">
         <div className="container-custom">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+          <Reveal
+            y={30}
+            duration={0.6}
             className="relative overflow-hidden rounded-3xl gradient-bg p-8 sm:p-12 lg:p-16 text-center"
           >
             {/* Decorative elements */}
@@ -519,7 +432,7 @@ export default function Landing() {
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </Reveal>
         </div>
       </section>
     </Layout>

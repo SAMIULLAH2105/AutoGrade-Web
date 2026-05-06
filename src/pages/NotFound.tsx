@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Home, ArrowLeft } from "lucide-react";
+import { FadeIn } from "@/components/ui/motion";
 
 const NotFound = () => {
   const location = useLocation();
@@ -15,7 +16,7 @@ const NotFound = () => {
   return (
     <Layout showFooter={false}>
       <div className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-4">
-        <div className="text-center">
+        <FadeIn className="text-center" y={12}>
           <div className="font-display text-8xl font-bold gradient-text mb-4">404</div>
           <h1 className="font-display text-2xl font-semibold mb-2">Page Not Found</h1>
           <p className="text-muted-foreground mb-8 max-w-md">
@@ -33,7 +34,7 @@ const NotFound = () => {
               Go Back
             </Button>
           </div>
-        </div>
+        </FadeIn>
       </div>
     </Layout>
   );

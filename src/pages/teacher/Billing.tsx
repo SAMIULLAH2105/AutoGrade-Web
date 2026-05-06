@@ -10,6 +10,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { useAppData, useAuth } from "@/state/AppContext";
 import { DoodleBackground } from "@/components/decor/DoodleBackground";
+import { FadeIn } from "@/components/ui/motion";
 
 type TeacherPlan = {
   planName: string;
@@ -44,7 +45,7 @@ export default function TeacherBillingPage() {
     <Layout>
       <div className="container-custom section-padding max-w-3xl mx-auto relative">
         <DoodleBackground />
-        <div className="relative">
+        <FadeIn className="relative">
         <div className="text-center mb-10">
           <div className="flex justify-center mb-4">
             <Badge variant="secondary" className="px-4 py-1 text-sm">
@@ -102,7 +103,7 @@ export default function TeacherBillingPage() {
             </div>
           </CardContent>
         </Card>
-        </div>
+        </FadeIn>
       </div>
     </Layout>
   );

@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { downloadBatchResultsPdf } from "@/services/pdf";
 import { DoodleBackground } from "@/components/decor/DoodleBackground";
 import { Badge } from "@/components/ui/badge";
+import { FadeIn } from "@/components/ui/motion";
 
 export default function TeacherEditResultsPage() {
   const { history, updateHistoryItem } = useAppData();
@@ -75,7 +76,7 @@ export default function TeacherEditResultsPage() {
     <Layout>
       <div className="container-custom section-padding max-w-5xl mx-auto relative">
         <DoodleBackground />
-        <div className="relative">
+        <FadeIn className="relative">
           <div className="flex items-center gap-3 mb-2">
             <Badge variant="secondary" className="px-3 py-1">
               Teacher
@@ -207,7 +208,7 @@ export default function TeacherEditResultsPage() {
             </div>
           </div>
         )}
-        </div>
+        </FadeIn>
       </div>
     </Layout>
   );

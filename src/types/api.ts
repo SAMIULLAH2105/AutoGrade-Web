@@ -82,6 +82,8 @@ export type HistoryItem = {
   file_names: string[];
   evaluation: string;
   message?: string;
+  /** Structured response from extract-text (if available). */
+  extract_results?: ExtractTextResultItem[];
   paper_id?: string;
   paper_code?: string;
   paper_number?: string;
